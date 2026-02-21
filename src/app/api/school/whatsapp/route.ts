@@ -7,11 +7,11 @@ import { School } from '@/models/School';
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+    if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = (session.user as any).schoolId;
     const status = await whatsappService.getStatus(schoolId);
 
     return NextResponse.json({ status });
@@ -19,11 +19,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+    if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = (session.user as any).schoolId;
     const { action } = await req.json();
 
     await dbConnect();

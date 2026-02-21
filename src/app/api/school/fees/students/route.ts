@@ -9,7 +9,7 @@ import { Class } from '@/models/Class';
 export async function GET(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+        if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
 
         await dbConnect();
 
-        const students = await Student.find({ classId, schoolId: session.user.schoolId }).lean();
+        const students = await Student.find({ classId, schoolId: (session.user as any).schoolId }).lean();
         const classData = await Class.findById(classId).lean();
 
         const feeRecords = await FeeRecord.find({
             classId,
-            schoolId: session.user.schoolId,
+            schoolId: (session.user as any).schoolId,
             studentId: { $in: students.map(s => s._id) }
         }).lean();
 

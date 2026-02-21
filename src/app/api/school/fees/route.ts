@@ -9,11 +9,11 @@ import mongoose from 'mongoose';
 export async function GET(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+        if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const schoolId = session.user.schoolId;
+        const schoolId = (session.user as any).schoolId;
         await dbConnect();
 
         const classes = await Class.find({ schoolId });
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+        if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
 
         await dbConnect();
         const cls = await Class.findOneAndUpdate(
-            { _id: classId, schoolId: session.user.schoolId },
+            { _id: classId, schoolId: (session.user as any).schoolId },
             { feeAmount },
             { new: true }
         );

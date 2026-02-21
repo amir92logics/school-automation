@@ -14,11 +14,11 @@ import { sandboxPaymentService } from '@/lib/sandbox-payment-service';
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'SCHOOL_ADMIN') {
+        if (!session || !session.user || (session.user as any).role !== 'SCHOOL_ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const schoolId = session.user.schoolId;
+        const schoolId = (session.user as any).schoolId;
         const { studentIds, classId, type, customMessage } = await req.json();
 
         if (!classId && type === 'bulk') {

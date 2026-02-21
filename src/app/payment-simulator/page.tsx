@@ -17,8 +17,8 @@ import {
 
 function SimulatorContent() {
     const searchParams = useSearchParams();
-    const gateway = searchParams.get('gateway');
-    const ref = searchParams.get('ref');
+    const gateway = searchParams?.get('gateway') ?? null;
+    const ref = searchParams?.get('ref') ?? null;
 
     const [transaction, setTransaction] = useState<any>(null);
     const [loading, setLoading] = useState(true);
