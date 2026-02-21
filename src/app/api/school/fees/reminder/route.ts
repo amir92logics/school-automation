@@ -11,6 +11,7 @@ import { Class } from '@/models/Class';
 import { FeeMessageLog } from '@/models/FeeMessageLog';
 import { sandboxPaymentService } from '@/lib/sandbox-payment-service';
 
+// Triggering Vercel rebuild with verified session fixes
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
