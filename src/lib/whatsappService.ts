@@ -3,6 +3,7 @@ import qrcode from 'qrcode';
 import path from 'path';
 import fs from 'fs';
 import { Server as SocketServer } from 'socket.io';
+import prisma from './prisma';
 
 const logToFile = (message: string) => {
     const logPath = path.join(process.cwd(), 'whatsapp-debug.log');
@@ -96,6 +97,13 @@ class WhatsAppService {
             logToFile(`QR RECEIVED for school: ${schoolId}`);
             try {
                 const qrDataURL = await qrcode.toDataURL(qr);
+
+                // Update Database for Polling
+                await prisma.school.update({
+                    where: { id: schoolId },
+                    data: { whatsappQr: qrDataURL, whatsappStatus: 'QR_READY' }
+                });
+
                 if (this.io) {
                     this.io.to(schoolId).emit('whatsapp-qr', { qr: qrDataURL });
                     logToFile(`QR EMITTED via socket to room: ${schoolId}`);
@@ -107,8 +115,14 @@ class WhatsAppService {
             }
         });
 
-        client.on('ready', () => {
+        client.on('ready', async () => {
             logToFile(`WhatsApp client READY for school: ${schoolId}`);
+
+            await prisma.school.update({
+                where: { id: schoolId },
+                data: { whatsappStatus: 'CONNECTED', whatsappQr: '' }
+            });
+
             if (this.io) {
                 this.io.to(schoolId).emit('whatsapp-status', { status: 'CONNECTED' });
             }
@@ -125,9 +139,15 @@ class WhatsAppService {
             }
         });
 
-        client.on('disconnected', (reason) => {
+        client.on('disconnected', async (reason) => {
             logToFile(`WhatsApp client DISCONNECTED for school ${schoolId}: ${reason}`);
             this.clients.delete(schoolId);
+
+            await prisma.school.update({
+                where: { id: schoolId },
+                data: { whatsappStatus: 'DISCONNECTED', whatsappQr: '' }
+            });
+
             if (this.io) {
                 this.io.to(schoolId).emit('whatsapp-status', { status: 'DISCONNECTED', reason });
             }

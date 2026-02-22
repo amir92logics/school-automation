@@ -13,9 +13,20 @@ export async function GET(req: NextRequest) {
     }
 
     const schoolId = (session.user as any).schoolId;
-    const status = await whatsappService.getStatus(schoolId);
 
-    return NextResponse.json({ status });
+    // Check current runtime status
+    const runtimeStatus = await whatsappService.getStatus(schoolId);
+
+    // Fetch persisted status/QR from DB for polling fallback
+    const school = await prisma.school.findUnique({
+        where: { id: schoolId },
+        select: { whatsappStatus: true, whatsappQr: true }
+    });
+
+    return NextResponse.json({
+        status: runtimeStatus !== 'DISCONNECTED' ? runtimeStatus : school?.whatsappStatus || 'DISCONNECTED',
+        qr: school?.whatsappQr || null
+    });
 }
 
 export async function POST(req: NextRequest) {

@@ -17,14 +17,34 @@ export default function WhatsAppPage() {
         // Fetch school settings for theme
         fetch('/api/school/settings').then(res => res.json()).then(data => setSchool(data));
 
-        // Initial status check
-        fetch('/api/school/whatsapp').then(res => res.json()).then(data => {
-            if (data.status === 'CONNECTED') {
-                setStatus('CONNECTED');
-            } else {
-                setStatus('NOT_CONNECTED');
+        const checkStatus = async () => {
+            try {
+                const res = await fetch('/api/school/whatsapp');
+                const data = await res.json();
+
+                if (data.status === 'CONNECTED') {
+                    setStatus('CONNECTED');
+                    setQr(null);
+                } else if (data.status === 'QR_READY') {
+                    setStatus('QR_READY');
+                    setQr(data.qr);
+                } else if (data.status === 'AUTH_FAILURE') {
+                    setStatus('AUTH_FAILURE');
+                } else {
+                    setStatus('NOT_CONNECTED');
+                }
+            } catch (err) {
+                console.error('Failed to poll whatsapp status:', err);
             }
-        });
+        };
+
+        // Initial check
+        checkStatus();
+
+        // Polling interval (every 5 seconds)
+        const interval = setInterval(checkStatus, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {

@@ -43,6 +43,8 @@ model School {
   primaryColor         String   @default("#3b82f6")
   secondaryColor       String   @default("#1e40af")
   isActive             Boolean  @default(true)
+  whatsappStatus       String   @default("DISCONNECTED")
+  whatsappQr           String   @default("")
   jazzcashPaymentLink  String   @default("")
   easypaisaPaymentLink String   @default("")
   createdAt            DateTime @default(now())
