@@ -1,7 +1,4 @@
-import { PaymentTransaction } from '@/models/PaymentTransaction';
-import { FeeRecord } from '@/models/FeeRecord';
-import { whatsappService } from './whatsappService';
-import dbConnect from './db';
+import prisma from './prisma';
 import crypto from 'crypto';
 
 export class SandboxPaymentService {
@@ -26,15 +23,15 @@ export class SandboxPaymentService {
         amount: number;
         gateway: 'JAZZCASH' | 'EASYPAISA';
     }) {
-        await dbConnect();
-
         const transactionRef = `TEST-${params.gateway.substring(0, 2)}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-        const transaction = await PaymentTransaction.create({
-            ...params,
-            transactionRef,
-            status: 'INITIATED',
-            isSandbox: true
+        const transaction = await prisma.paymentTransaction.create({
+            data: {
+                ...params,
+                transactionRef,
+                status: 'INITIATED',
+                isSandbox: true
+            }
         });
 
         return transaction;
@@ -52,9 +49,9 @@ export class SandboxPaymentService {
      * Processes a simulated payment success or failure (Idempotent).
      */
     public async processSimulation(transactionRef: string, targetStatus: 'SUCCESS' | 'FAILED') {
-        await dbConnect();
-
-        const transaction = await PaymentTransaction.findOne({ transactionRef });
+        const transaction = await prisma.paymentTransaction.findUnique({
+            where: { transactionRef }
+        });
 
         if (!transaction) {
             throw new Error('Transaction not found');
@@ -65,13 +62,16 @@ export class SandboxPaymentService {
         }
 
         // Update Transaction
-        transaction.status = targetStatus;
-        await transaction.save();
+        await prisma.paymentTransaction.update({
+            where: { id: transaction.id },
+            data: { status: targetStatus }
+        });
 
         if (targetStatus === 'SUCCESS') {
             // Update FeeRecord
-            await FeeRecord.findByIdAndUpdate(transaction.feeRecordId, {
-                status: 'PAID'
+            await prisma.feeRecord.update({
+                where: { id: transaction.feeRecordId },
+                data: { status: 'PAID' }
             });
 
             // Send WhatsApp Confirmation (Async)

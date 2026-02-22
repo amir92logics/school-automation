@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Users, GraduationCap, Percent, CreditCard, MessageCircle, Loader2, ShieldCheck } from 'lucide-react';
 
 interface SchoolStats {
-    school: { _id: string; name: string; theme: { primaryColor: string; secondaryColor: string } };
+    school: { id: string; name: string; primaryColor: string; secondaryColor: string };
     studentCount: number;
     classCount: number;
     remindersSent: number;
@@ -57,7 +57,7 @@ export default function SchoolDashboard() {
 
     return (
         <>
-            <ThemeProvider theme={{ primary: stats.school.theme.primaryColor, secondary: stats.school.theme.secondaryColor }} />
+            <ThemeProvider theme={{ primary: stats.school.primaryColor, secondary: stats.school.secondaryColor }} />
             <Sidebar role="SCHOOL_ADMIN" />
             <Shell role="SCHOOL_ADMIN" title={stats.school.name}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">

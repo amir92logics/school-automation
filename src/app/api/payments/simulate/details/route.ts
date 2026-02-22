@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PaymentTransaction } from '@/models/PaymentTransaction';
-import { Student } from '@/models/Student';
-import { School } from '@/models/School';
-import dbConnect from '@/lib/db';
+export const dynamic = 'force-dynamic';
+
+import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     if (process.env.NODE_ENV === 'production') {
@@ -17,15 +16,19 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Reference required' }, { status: 400 });
         }
 
-        await dbConnect();
-
-        const transaction = await PaymentTransaction.findOne({ transactionRef: ref });
+        const transaction = await prisma.paymentTransaction.findUnique({
+            where: { transactionRef: ref }
+        });
         if (!transaction) {
             return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
         }
 
-        const student = await Student.findById(transaction.studentId);
-        const school = await School.findById(transaction.schoolId);
+        const student = await prisma.student.findUnique({
+            where: { id: transaction.studentId }
+        });
+        const school = await prisma.school.findUnique({
+            where: { id: transaction.schoolId }
+        });
 
         return NextResponse.json({
             amount: transaction.amount,

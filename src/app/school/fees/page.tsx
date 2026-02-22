@@ -35,7 +35,7 @@ export default function FeesPage() {
         fetch('/api/school/settings').then(res => res.json()).then(setSchool);
         fetch('/api/school/fees').then(res => res.json()).then(data => {
             setClasses(data);
-            if (data.length > 0) setSelectedClass(data[0]._id);
+            if (data.length > 0) setSelectedClass(data[0].id);
             setLoading(false);
         });
     }, []);
@@ -60,16 +60,16 @@ export default function FeesPage() {
                 body: JSON.stringify({ classId, feeAmount: Number(newFee) }),
             });
             if (res.ok) {
-                setClasses(classes.map(c => c._id === classId ? { ...c, feeAmount: Number(newFee) } : c));
+                setClasses(classes.map(c => c.id === classId ? { ...c, feeAmount: Number(newFee) } : c));
             }
         }
     };
 
     const openEditor = async (type: 'single' | 'bulk', student?: any) => {
         setReminderType(type);
-        setTargetStudentId(student?._id);
+        setTargetStudentId(student?.id);
 
-        const currentClass = classes.find(c => c._id === selectedClass);
+        const currentClass = classes.find(c => c.id === selectedClass);
 
         // Always re-fetch school settings to get the latest payment links
         let freshSchool = school;
@@ -129,7 +129,7 @@ export default function FeesPage() {
 
     return (
         <>
-            <ThemeProvider theme={{ primary: school.theme.primaryColor, secondary: school.theme.secondaryColor }} />
+            <ThemeProvider theme={{ primary: school.primaryColor, secondary: school.secondaryColor }} />
             <Sidebar role="SCHOOL_ADMIN" />
             <Shell role="SCHOOL_ADMIN" title="Fee Management">
 
@@ -143,14 +143,14 @@ export default function FeesPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {classes.map((cls) => (
-                            <div key={cls._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+                            <div key={cls.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <h4 className="font-bold text-gray-800 text-lg">{cls.name}</h4>
                                         <p className="text-sm text-gray-400 font-medium">Section {cls.section}</p>
                                     </div>
                                     <button
-                                        onClick={() => handleUpdateFee(cls._id, cls.feeAmount)}
+                                        onClick={() => handleUpdateFee(cls.id, cls.feeAmount)}
                                         className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                                     >
                                         <Edit2 size={16} />
@@ -162,8 +162,8 @@ export default function FeesPage() {
                                         <p className="text-2xl font-black text-gray-800">Rs {cls.feeAmount}</p>
                                     </div>
                                     <button
-                                        onClick={() => setSelectedClass(cls._id)}
-                                        className={`p-2 rounded-xl transition-all ${selectedClass === cls._id ? 'school-primary text-white scale-110 shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}
+                                        onClick={() => setSelectedClass(cls.id)}
+                                        className={`p-2 rounded-xl transition-all ${selectedClass === cls.id ? 'school-primary text-white scale-110 shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}
                                     >
                                         <ChevronRight size={20} />
                                     </button>
@@ -238,7 +238,7 @@ export default function FeesPage() {
                                         </td>
                                     </tr>
                                 ) : students.map((student) => (
-                                    <tr key={student._id} className="hover:bg-gray-50/50 transition-colors group">
+                                    <tr key={student.id} className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="px-6 py-4">
                                             <p className="font-bold text-gray-800">{student.name}</p>
                                             <p className="text-xs text-gray-400">Roll: {student.rollNumber}</p>
@@ -268,11 +268,11 @@ export default function FeesPage() {
                                                 {student.status === 'PENDING' && (
                                                     <button
                                                         onClick={() => openEditor('single', student)}
-                                                        disabled={sendingReminder === student._id}
+                                                        disabled={sendingReminder === student.id}
                                                         className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
                                                         title="Send WhatsApp Reminder"
                                                     >
-                                                        {sendingReminder === student._id ? (
+                                                        {sendingReminder === student.id ? (
                                                             <Loader2 className="animate-spin" size={18} />
                                                         ) : (
                                                             <Send size={18} />
@@ -297,7 +297,7 @@ export default function FeesPage() {
                         onClose={() => setIsWhatsAppEditorOpen(false)}
                         onSend={handleConfirmSend}
                         data={editorData}
-                        primaryColor={school.theme.primaryColor}
+                        primaryColor={school.primaryColor}
                     />
                 )}
             </Shell>

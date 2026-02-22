@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/db';
-import { Class } from '@/models/Class';
-import { FeeRecord } from '@/models/FeeRecord';
-import mongoose from 'mongoose';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     try {
@@ -14,9 +13,9 @@ export async function GET(req: NextRequest) {
         }
 
         const schoolId = (session.user as any).schoolId;
-        await dbConnect();
-
-        const classes = await Class.find({ schoolId });
+        const classes = await prisma.class.findMany({
+            where: { schoolId }
+        });
         return NextResponse.json(classes);
     } catch (error: any) {
         console.error('Fees GET error:', error);
@@ -36,12 +35,10 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: 'Missing data' }, { status: 400 });
         }
 
-        await dbConnect();
-        const cls = await Class.findOneAndUpdate(
-            { _id: classId, schoolId: (session.user as any).schoolId },
-            { feeAmount },
-            { new: true }
-        );
+        const cls = await prisma.class.update({
+            where: { id: classId, schoolId: (session.user as any).schoolId },
+            data: { feeAmount }
+        });
 
         if (!cls) {
             return NextResponse.json({ error: 'Class not found' }, { status: 404 });

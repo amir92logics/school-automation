@@ -6,13 +6,14 @@ import { Shell } from '@/components/Shell';
 import { Plus, Power, Palette } from 'lucide-react';
 
 interface School {
-    _id: string;
+    id: string;
     name: string;
     email: string;
     isActive: boolean;
     maxStudents: number;
     maxClasses: number;
-    theme: { primaryColor: string };
+    primaryColor: string;
+    secondaryColor: string;
 }
 
 export default function SchoolsPage() {
@@ -62,7 +63,7 @@ export default function SchoolsPage() {
     };
 
     const handleEdit = (school: any) => {
-        setEditingSchoolId(school._id);
+        setEditingSchoolId(school.id);
         setFormData({
             name: school.name,
             email: school.email,
@@ -70,8 +71,8 @@ export default function SchoolsPage() {
             phone: school.phone || '',
             maxStudents: school.maxStudents,
             maxClasses: school.maxClasses,
-            primaryColor: school.theme.primaryColor,
-            secondaryColor: school.theme.secondaryColor || '#1e40af',
+            primaryColor: school.primaryColor,
+            secondaryColor: school.secondaryColor || '#1e40af',
             isActive: school.isActive
         });
         setShowModal(true);
@@ -113,7 +114,7 @@ export default function SchoolsPage() {
                         </thead>
                         <tbody>
                             {schools.map((school) => (
-                                <tr key={school._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                                <tr key={school.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
                                     <td className="p-6">
                                         <div className="font-bold text-gray-800">{school.name}</div>
                                         <div className="text-sm text-gray-500">{school.email}</div>
@@ -131,7 +132,7 @@ export default function SchoolsPage() {
                                     </td>
                                     <td className="p-6 text-right">
                                         <div className="flex items-center justify-end space-x-2">
-                                            <div className="w-6 h-6 rounded-full border border-gray-200" style={{ backgroundColor: school.theme.primaryColor }}></div>
+                                            <div className="w-6 h-6 rounded-full border border-gray-200" style={{ backgroundColor: school.primaryColor }}></div>
                                             <button
                                                 onClick={() => handleEdit(school)}
                                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

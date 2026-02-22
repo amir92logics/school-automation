@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/db';
-import { Student } from '@/models/Student';
-import { FeeRecord } from '@/models/FeeRecord';
-import { Class } from '@/models/Class';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     try {
@@ -20,27 +19,31 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Class ID required' }, { status: 400 });
         }
 
-        await dbConnect();
+        const students = await prisma.student.findMany({
+            where: { classId, schoolId: (session.user as any).schoolId }
+        });
+        const classData = await prisma.class.findUnique({
+            where: { id: classId }
+        });
 
-        const students = await Student.find({ classId, schoolId: (session.user as any).schoolId }).lean();
-        const classData = await Class.findById(classId).lean();
+        const feeRecords = await prisma.feeRecord.findMany({
+            where: {
+                classId,
+                schoolId: (session.user as any).schoolId,
+                studentId: { in: students.map((s: any) => s.id) }
+            }
+        });
 
-        const feeRecords = await FeeRecord.find({
-            classId,
-            schoolId: (session.user as any).schoolId,
-            studentId: { $in: students.map(s => s._id) }
-        }).lean();
-
-        const studentsWithFees = students.map(student => {
-            const record = feeRecords.find(r =>
-                r.studentId?.toString() === student._id?.toString()
+        const studentsWithFees = students.map((student: any) => {
+            const record = feeRecords.find((r: any) =>
+                r.studentId === student.id
             );
             return {
                 ...student,
                 feeAmount: classData?.feeAmount || 0,
                 status: record?.status || 'PENDING',
                 dueDate: record?.dueDate || null,
-                recordId: record?._id || null
+                recordId: record?.id || null
             };
         });
 

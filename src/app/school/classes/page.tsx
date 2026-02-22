@@ -6,7 +6,7 @@ import { Shell } from '@/components/Shell';
 import { Plus, BookOpen, AlertCircle } from 'lucide-react';
 
 interface Class {
-    _id: string;
+    id: string;
     name: string;
     section: string;
     feeAmount: number;
@@ -49,7 +49,7 @@ export default function ClassesPage() {
     };
 
     const handleEdit = (cls: any) => {
-        setEditingClassId(cls._id);
+        setEditingClassId(cls.id);
         setFormData({
             name: cls.name,
             section: cls.section,
@@ -79,7 +79,7 @@ export default function ClassesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {classes.map((cls) => (
-                        <div key={cls._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all group relative">
+                        <div key={cls.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all group relative">
                             <button
                                 onClick={() => handleEdit(cls)}
                                 className="absolute top-4 right-4 p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"

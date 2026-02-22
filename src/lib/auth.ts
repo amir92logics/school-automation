@@ -1,8 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import dbConnect from './db';
-import { User } from '@/models/User';
-import { School } from '@/models/School';
+import prisma from './prisma';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
@@ -21,8 +19,9 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Email and password required');
                 }
 
-                await dbConnect();
-                const user = await User.findOne({ email: credentials.email });
+                const user = await prisma.user.findUnique({
+                    where: { email: credentials.email }
+                });
 
                 if (!user) {
                     throw new Error('Invalid email or password');
@@ -36,18 +35,20 @@ export const authOptions: NextAuthOptions = {
 
                 // Check if school is active for SCHOOL_ADMIN
                 if (user.role === 'SCHOOL_ADMIN' && user.schoolId) {
-                    const school = await School.findById(user.schoolId);
+                    const school = await prisma.school.findUnique({
+                        where: { id: user.schoolId }
+                    });
                     if (!school || !school.isActive) {
                         throw new Error('This school account is deactivated. Contact Support.');
                     }
                 }
 
                 return {
-                    id: user._id.toString(),
+                    id: user.id,
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    schoolId: user.schoolId ? user.schoolId.toString() : null,
+                    schoolId: user.schoolId,
                 };
             },
         }),

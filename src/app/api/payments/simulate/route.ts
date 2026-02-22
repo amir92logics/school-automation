@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { sandboxPaymentService } from '@/lib/sandbox-payment-service';
-import { PaymentTransaction } from '@/models/PaymentTransaction';
-import { Student } from '@/models/Student';
-import { School } from '@/models/School';
 import { whatsappService } from '@/lib/whatsappService';
-import dbConnect from '@/lib/db';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
     if (process.env.NODE_ENV === 'production') {
@@ -18,10 +17,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
         }
 
-        await dbConnect();
-
-        // Find transaction to get context for WhatsApp
-        const transaction = await PaymentTransaction.findOne({ transactionRef });
+        const transaction = await prisma.paymentTransaction.findUnique({
+            where: { transactionRef }
+        });
         if (!transaction) {
             return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
         }
@@ -35,13 +33,17 @@ export async function POST(req: NextRequest) {
         // Send actual WhatsApp confirmation if SUCCESS
         if (status === 'SUCCESS') {
             try {
-                const student = await Student.findById(transaction.studentId);
-                const school = await School.findById(transaction.schoolId);
+                const student = await prisma.student.findUnique({
+                    where: { id: transaction.studentId }
+                });
+                const school = await prisma.school.findUnique({
+                    where: { id: transaction.schoolId }
+                });
 
                 if (student && school) {
                     const message = `✅ *Payment Success Confirmation*\n\nDear Parent,\nYour payment for ${student.name} of Rs ${transaction.amount} via ${transaction.gateway} has been successfully received.\n\nTransaction Ref: ${transactionRef}\nStatus: PAID (Simulated)\n\nRegards,\n${school.name}`;
 
-                    await whatsappService.sendMessage(school._id.toString(), student.parentPhone, message);
+                    await whatsappService.sendMessage(school.id, student.parentPhone, message);
                 }
             } catch (waError) {
                 console.error('Failed to send WhatsApp confirmation in simulation:', waError);

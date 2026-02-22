@@ -24,8 +24,8 @@ export default function SchoolSettings() {
                 setFormData({
                     name: data.name,
                     phone: data.phone,
-                    primaryColor: data.theme.primaryColor,
-                    secondaryColor: data.theme.secondaryColor,
+                    primaryColor: data.primaryColor,
+                    secondaryColor: data.secondaryColor,
                 });
                 setLoading(false);
             });
@@ -52,8 +52,8 @@ export default function SchoolSettings() {
                 setFormData({
                     name: savedSchool.name || formData.name,
                     phone: savedSchool.phone || formData.phone,
-                    primaryColor: savedSchool.theme?.primaryColor || formData.primaryColor,
-                    secondaryColor: savedSchool.theme?.secondaryColor || formData.secondaryColor,
+                    primaryColor: savedSchool.primaryColor || formData.primaryColor,
+                    secondaryColor: savedSchool.secondaryColor || formData.secondaryColor,
                 });
 
                 setMessage('✅ Settings updated successfully');

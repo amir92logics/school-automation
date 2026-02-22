@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { getToken } from 'next-auth/jwt';
-import dbConnect from '@/lib/db';
-import { School } from '@/models/School';
-import { Student } from '@/models/Student';
-import { Class } from '@/models/Class';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: Request) {
     const token = await getToken({ req: req as any });
@@ -11,13 +10,11 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
-
     const [totalSchools, totalStudents, totalClasses, activeSchools] = await Promise.all([
-        School.countDocuments({}),
-        Student.countDocuments({}),
-        Class.countDocuments({}),
-        School.countDocuments({ isActive: true }),
+        prisma.school.count(),
+        prisma.student.count(),
+        prisma.class.count(),
+        prisma.school.count({ where: { isActive: true } }),
     ]);
 
     return NextResponse.json({

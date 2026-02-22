@@ -31,10 +31,10 @@ export default function WhatsAppPage() {
         if (!school) return;
 
         // Initialize socket
-        console.log('Connecting to socket with schoolId:', school._id);
+        console.log('Connecting to socket with schoolId:', school.id);
         const socketInstance = io({
             path: '/api/socket',
-            query: { schoolId: school._id },
+            query: { schoolId: school.id },
         });
 
         socketInstance.on('connect', () => {
@@ -94,7 +94,7 @@ export default function WhatsAppPage() {
 
     return (
         <>
-            <ThemeProvider theme={{ primary: school.theme.primaryColor, secondary: school.theme.secondaryColor }} />
+            <ThemeProvider theme={{ primary: school.primaryColor, secondary: school.secondaryColor }} />
             <Sidebar role="SCHOOL_ADMIN" />
             <Shell role="SCHOOL_ADMIN" title="WhatsApp Session">
                 <div className="max-w-4xl mx-auto">

@@ -6,14 +6,14 @@ import { Shell } from '@/components/Shell';
 import { Plus, User, AlertCircle } from 'lucide-react';
 
 interface Student {
-    _id: string;
+    id: string;
     name: string;
     rollNumber: string;
-    classId: { name: string; section: string };
+    class: { id: string; name: string; section: string };
 }
 
 interface Class {
-    _id: string;
+    id: string;
     name: string;
     section: string;
 }
@@ -60,11 +60,11 @@ export default function StudentsPage() {
     };
 
     const handleEdit = (student: any) => {
-        setEditingStudentId(student._id);
+        setEditingStudentId(student.id);
         setFormData({
             name: student.name,
             rollNumber: student.rollNumber,
-            classId: student.classId?._id || student.classId || '',
+            classId: student.class?.id || student.classId || '',
             parentName: student.parentName || '',
             parentPhone: student.parentPhone || ''
         });
@@ -102,7 +102,7 @@ export default function StudentsPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {students.map((student) => (
-                                <tr key={student._id} className="hover:bg-gray-50/50 transition-all">
+                                <tr key={student.id} className="hover:bg-gray-50/50 transition-all">
                                     <td className="p-6 flex items-center space-x-4">
                                         <div className="bg-blue-50 text-blue-500 w-10 h-10 rounded-full flex items-center justify-center font-bold">
                                             {student.name.charAt(0)}
@@ -112,7 +112,7 @@ export default function StudentsPage() {
                                     <td className="p-6 font-medium text-gray-600">#{student.rollNumber}</td>
                                     <td className="p-6">
                                         <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-tight">
-                                            {student.classId?.name} - {student.classId?.section}
+                                            {student.class?.name} - {student.class?.section}
                                         </span>
                                     </td>
                                     <td className="p-6 text-right">
@@ -162,7 +162,7 @@ export default function StudentsPage() {
                                     <label className="text-sm font-bold text-gray-600">Select Class</label>
                                     <select required className="w-full border-gray-200 rounded-xl px-4 py-3 border focus:ring-2 focus:school-primary outline-none appearance-none bg-white" value={formData.classId} onChange={e => setFormData({ ...formData, classId: e.target.value })}>
                                         <option value="">Choose a class...</option>
-                                        {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
+                                        {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
                                     </select>
                                 </div>
 

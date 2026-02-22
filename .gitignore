@@ -45,3 +45,5 @@ next-env.d.ts
 whatsapp-sessions/
 whatsapp-debug.log
 
+
+/src/generated/prisma

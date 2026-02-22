@@ -1,15 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { getToken } from 'next-auth/jwt';
-import dbConnect from '@/lib/db';
-import { School } from '@/models/School';
-import { Student } from '@/models/Student';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: Request) {
     const token = await getToken({ req: req as any });
     if (!token || token.role !== 'SCHOOL_ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    await dbConnect();
-    const students = await Student.find({ schoolId: token.schoolId }).populate('classId').sort({ createdAt: -1 });
+    const students = await prisma.student.findMany({
+        where: { schoolId: token.schoolId as string },
+        include: { class: true },
+        orderBy: { createdAt: 'desc' }
+    });
     return NextResponse.json(students);
 }
 
@@ -20,21 +23,20 @@ export async function POST(req: Request) {
     const { name, rollNumber, classId, parentName, parentPhone } = await req.json();
     const schoolId = token.schoolId as string;
 
-    await dbConnect();
+    const school = await prisma.school.findUnique({
+        where: { id: schoolId }
+    });
+    const studentCount = await prisma.student.count({
+        where: { schoolId }
+    });
 
-    if (!parentPhone || !/^\d{10,15}$/.test(parentPhone)) {
-        return NextResponse.json({ error: 'Valid parent phone (10-15 digits) is required.' }, { status: 400 });
-    }
-
-    // LIMIT ENFORCEMENT
-    const school = await School.findById(schoolId);
-    const studentCount = await Student.countDocuments({ schoolId });
-
-    if (studentCount >= school.maxStudents) {
+    if (!school || studentCount >= school.maxStudents) {
         return NextResponse.json({ error: 'Student limit reached for your plan.' }, { status: 403 });
     }
 
-    const student = await Student.create({ name, rollNumber, classId, parentName, parentPhone, schoolId });
+    const student = await prisma.student.create({
+        data: { name, rollNumber, classId, parentName, parentPhone, schoolId }
+    });
     return NextResponse.json(student);
 }
 
@@ -50,13 +52,10 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Student ID is required' }, { status: 400 });
         }
 
-        await dbConnect();
-
-        const student = await Student.findOneAndUpdate(
-            { _id: id, schoolId: token.schoolId },
-            { name, rollNumber, classId, parentName, parentPhone },
-            { new: true }
-        );
+        const student = await prisma.student.update({
+            where: { id, schoolId: token.schoolId as string },
+            data: { name, rollNumber, classId, parentName, parentPhone }
+        });
 
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import dbConnect from '@/lib/db';
-import { School } from '@/models/School';
+import prisma from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
     try {
@@ -11,9 +12,9 @@ export async function GET(req: Request) {
         }
 
         const schoolId = token.schoolId as string;
-        await dbConnect();
-
-        const school = await School.findOne({ _id: schoolId }).lean();
+        const school = await prisma.school.findUnique({
+            where: { id: schoolId }
+        });
         if (!school) {
             return NextResponse.json({ error: 'School not found' }, { status: 404 });
         }
@@ -40,22 +41,15 @@ export async function POST(req: Request) {
 
         console.log('[Settings POST] Saving for school:', schoolId);
 
-        await dbConnect();
-
-        // Use findOneAndUpdate with string _id filter — avoids ObjectId cast failures
-        // when school _id was created as a plain string instead of an ObjectId
-        const school = await School.findOneAndUpdate(
-            { _id: schoolId },
-            {
-                $set: {
-                    name,
-                    phone,
-                    'theme.primaryColor': primaryColor,
-                    'theme.secondaryColor': secondaryColor,
-                }
-            },
-            { new: true, runValidators: false }
-        ).lean();
+        const school = await prisma.school.update({
+            where: { id: schoolId },
+            data: {
+                name,
+                phone,
+                primaryColor,
+                secondaryColor,
+            }
+        });
 
         if (!school) {
             return NextResponse.json({ error: 'School not found' }, { status: 404 });

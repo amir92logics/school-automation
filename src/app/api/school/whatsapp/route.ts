@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { whatsappService } from '@/lib/whatsappService';
-import dbConnect from '@/lib/db';
-import { School } from '@/models/School';
+import prisma from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -26,8 +27,9 @@ export async function POST(req: NextRequest) {
     const schoolId = (session.user as any).schoolId;
     const { action } = await req.json();
 
-    await dbConnect();
-    const school = await School.findById(schoolId);
+    const school = await prisma.school.findUnique({
+        where: { id: schoolId }
+    });
     if (!school || !school.isActive) {
         return NextResponse.json({ error: 'School inactive' }, { status: 403 });
     }
